@@ -1,0 +1,107 @@
+﻿#include <iostream>
+#include <string>
+#include <memory>
+
+class str_error : public std::exception // обработка исключений
+{
+public:
+	str_error(const std::string& message) : message{ message }
+	{}
+	const char* what() const noexcept override
+	{
+		return message.c_str();     // получаем из std::string строку const char*
+	}
+private:
+	std::string message;    // сообщение об ошибке
+};
+
+class Int
+{
+public:
+	//Int(int value = 0) : _value{ value } { std::cout << "Int" << std::endl; }
+   //~Int() { std::cout << "~Int" << std::endl; }
+	int _value;
+	int status{};
+};
+
+class smart_array
+{
+public:
+	smart_array(int count)
+	{
+		arr = new Int[count];
+		x = count;
+	}
+
+	~smart_array()
+	{
+		if (nullptr != arr)
+		{
+			delete[] arr;
+		}
+	}
+public:
+	int x;
+	int count{};
+	Int* arr{ nullptr };
+	void add_element(int value)
+	{
+		count++;
+		if (count > x) throw str_error("Количество элементов больше количества элементов, на которую выделена память");
+		for (int i = 0; i < x; i++)
+		{
+			if (arr[i].status != 1)
+			{
+				arr[i]._value = value;
+				arr[i].status = 1;
+				break;
+			}
+		}
+	}
+	int get_element(int value)
+	{
+		if ((value < 0) || (value >= x)) throw str_error("Некорректность индекса получения элемента");
+		return arr[value]._value;
+	}
+
+	smart_array& operator=(smart_array& other) // перегрузка оператора =
+	{    
+		x = other.x; // копирование полей
+		count = other.count;// копирование полей
+		delete[] arr; // удаление исходного динамического массива 
+		arr = new Int[x]; // создание дин. массива такой же размерности
+		
+		for (int i = 0; i < x; i++)
+		{
+			arr[i]._value = other.arr[i]._value; // заполнение массива
+		}
+
+		return *this;
+	}
+
+};
+
+int main(int argc, char* argv[])
+{
+	setlocale(LC_ALL, "Russian");
+	system("chcp 1251");
+	try {
+		smart_array arr(5);
+		arr.add_element(1);
+		arr.add_element(4);
+		arr.add_element(155);
+
+		smart_array new_array(2);
+		new_array.add_element(44);
+		new_array.add_element(34);
+
+		arr = new_array;
+
+		std::cout << arr.get_element(1) << std::endl;
+	}
+	catch (const std::exception& ex) {
+		std::cout << ex.what() << std::endl;
+	}
+	return EXIT_SUCCESS;
+
+}
