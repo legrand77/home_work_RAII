@@ -1,6 +1,6 @@
 ﻿#include <iostream>
+#include <vector>
 #include <string>
-#include <memory>
 
 class str_error : public std::exception // обработка исключений
 {
@@ -17,21 +17,34 @@ private:
 
 class Int
 {
-public:
-	//Int(int value = 0) : _value{ value } { std::cout << "Int" << std::endl; }
-   //~Int() { std::cout << "~Int" << std::endl; }
+private:
 	int _value;
 	int status{};
+
+public:
+	void set_value(int x) { _value = x; }
+	void set_status(int x) { status = x; }
+	int get_value() { return _value; }
+	int get_status() { return status; }
+
 };
 
 class smart_array
 {
+private:
+	int x;
+	int count{};
+	Int* arr{ nullptr };
+
 public:
 	smart_array(int count)
 	{
 		arr = new Int[count];
 		x = count;
 	}
+
+	
+		
 
 	~smart_array()
 	{
@@ -40,20 +53,18 @@ public:
 			delete[] arr;
 		}
 	}
+
 public:
-	int x;
-	int count{};
-	Int* arr{ nullptr };
 	void add_element(int value)
 	{
 		count++;
 		if (count > x) throw str_error("Количество элементов больше количества элементов, на которую выделена память");
 		for (int i = 0; i < x; i++)
 		{
-			if (arr[i].status != 1)
+			if (arr[i].get_status() != 1)
 			{
-				arr[i]._value = value;
-				arr[i].status = 1;
+				arr[i].set_value(value);
+				arr[i].set_status(1);
 				break;
 			}
 		}
@@ -61,24 +72,24 @@ public:
 	int get_element(int value)
 	{
 		if ((value < 0) || (value >= x)) throw str_error("Некорректность индекса получения элемента");
-		return arr[value]._value;
+		return arr[value].get_value();
 	}
 
-	smart_array& operator=(smart_array& other) // перегрузка оператора =
-	{    
-		x = other.x; // копирование полей
-		count = other.count;// копирование полей
-		delete[] arr; // удаление исходного динамического массива 
-		arr = new Int[x]; // создание дин. массива такой же размерности
-		
-		for (int i = 0; i < x; i++)
-		{
-			arr[i]._value = other.arr[i]._value; // заполнение массива
-		}
+	
+       smart_array& operator=(smart_array& other) // перегрузка оператора =
+	    {
+		    x = other.x; // копирование полей
+		    count = other.count;// копирование полей
+		   delete[] arr; // удаление исходного динамического массива
+		   arr = new Int[x]; // создание дин. массива такой же размерности
 
-		return *this;
-	}
-
+		  for (int i = 0; i < x; i++)
+		  {
+			arr[i].set_value(other.arr[i].get_value()); // заполнение массива
+		  }
+		  
+		  return *this;
+	    }
 };
 
 int main(int argc, char* argv[])
@@ -103,5 +114,4 @@ int main(int argc, char* argv[])
 		std::cout << ex.what() << std::endl;
 	}
 	return EXIT_SUCCESS;
-
 }
